@@ -31,17 +31,25 @@ func (s *WalletService) GetBalance(userID string) (model.WalletResponse, error) 
 
 }
 
-func (s *WalletService) Withdraw(userID string, amount decimal.Decimal) error {
+func (s *WalletService) Withdraw(userID string, amount decimal.Decimal) (model.WithdrawResponse, error) {
 	wallet, err := s.repo.FindByUserID(userID)
 	if err != nil {
-		return errors.New("wallet tidak ditemukan")
+		return model.WithdrawResponse{}, errors.New("wallet tidak ditemukan")
 	}
 
 	if wallet.Balance.LessThan(amount) {
-		return errors.New("Saldo anda tidak cukup")
+		return model.WithdrawResponse{}, errors.New("Saldo anda tidak cukup")
 	}
 
 	newBalance := wallet.Balance.Sub(amount)
+	err = s.repo.UpdateBalance(userID, newBalance)
+	if err != nil {
+		return model.WithdrawResponse{}, err
+	}
 
-	return s.repo.UpdateBalance(userID, newBalance)
+	return model.WithdrawResponse{
+		Message:    "Tarik tunai berhasil",
+		UserID:     userID,
+		NewBalance: newBalance,
+	}, nil
 }

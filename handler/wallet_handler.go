@@ -31,19 +31,23 @@ func (h *WalletHandler) GetBalance(c echo.Context) error {
 func (h *WalletHandler) Withdraw(c echo.Context) error {
 	req := new(model.WithdrawRequest)
 
-	if err := c.Bind(req); err != nil {
+	if req.Amount.IsNegative() || req.Amount.IsZero() {
 		return c.JSON(http.StatusBadRequest, map[string]string{
-			"message": "Format inputan harus berupa json",
+			"message" : "Inputan amount tidak boleh 0"
 		})
 	}
 
-	err := h.svc.Withdraw(req.UserID, req.Amount)
+	if err := c.Bind(req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "Invalid Request",
+		})
+	}
+
+	resp, err := h.svc.Withdraw(req.UserID, req.Amount)
 	if err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, map[string]string{
 			"message": err.Error(),
 		})
 	}
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": "Tarik tunai berhasil",
-	})
+	return c.JSON(http.StatusOK, resp)
 }
