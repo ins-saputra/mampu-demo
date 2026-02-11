@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"mampu-demo/model"
 	"mampu-demo/service"
 	"net/http"
@@ -31,15 +32,17 @@ func (h *WalletHandler) GetBalance(c echo.Context) error {
 func (h *WalletHandler) Withdraw(c echo.Context) error {
 	req := new(model.WithdrawRequest)
 
-	if req.Amount.IsNegative() || req.Amount.IsZero() {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"message" : "Inputan amount tidak boleh 0"
-		})
-	}
+	fmt.Printf("check amount: %+v\n", req)
 
 	if err := c.Bind(req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"message": "Invalid Request",
+		})
+	}
+
+	if req.Amount.IsNegative() || req.Amount.IsZero() {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"message": "Inputan amount tidak boleh 0 atau negative",
 		})
 	}
 
